@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OORTIS AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Theme Variables - Tron / Cyberpunk */
+            --bg-deep: #050505;
+            --bg-panel: rgba(10, 10, 15, 0.85);
+            --border-glass: rgba(0, 255, 242, 0.15); /* Cyan tint */
+            --primary: #00fff2; /* Cyan Neon */
+            --primary-dim: rgba(0, 255, 242, 0.1);
+            --secondary: #8b5cf6; /* Purple accent */
+            --text-main: #e0f2fe;
+            --text-dim: #64748b;
+            --bot-bubble: rgba(0, 255, 242, 0.05);
+            --user-bubble: rgba(139, 92, 246, 0.15);
+        }
+
+        * { box-sizing: border-box; }
+        
+        body {
+            margin: 0;
+            background-color: var(--bg-deep);
+            /* Grid Background */
+            background-image: 
+                linear-gradient(rgba(0, 255, 242, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 242, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* --- MAIN INTERFACE --- */
+        .interface-container {
+            width: 1000px;
+            height: 700px;
+            max-width: 95vw;
+            max-height: 95vh;
+            background: var(--bg-panel);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            box-shadow: 0 0 40px rgba(0, 255, 242, 0.05);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Decorative Corners */
+        .interface-container::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 20px; height: 20px;
+            border-top: 2px solid var(--primary);
+            border-left: 2px solid var(--primary);
+            border-radius: 12px 0 0 0;
+        }
+        .interface-container::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; right: -1px;
+            width: 20px; height: 20px;
+            border-bottom: 2px solid var(--primary);
+            border-right: 2px solid var(--primary);
+            border-radius: 0 0 12px 0;
+        }
+
+        /* Header */
+        header {
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border-glass);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .brand {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(0, 255, 242, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-light {
+            width: 8px; height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+
+        /* Chat Area */
+        .chat-viewport {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            scroll-behavior: smooth;
+        }
+
+        /* Scrollbar */
+        .chat-viewport::-webkit-scrollbar { width: 6px; }
+        .chat-viewport::-webkit-scrollbar-track { background: transparent; }
+        .chat-viewport::-webkit-scrollbar-thumb { background: var(--border-glass); border-radius: 3px; }
+
+        /* Messages */
+        .message-row {
+            display: flex;
+            width: 100%;
+        }
+        .message-row.user { justify-content: flex-end; }
+        .message-row.bot { justify-content: flex-start; }
+
+        .bubble {
+            max-width: 75%;
+            padding: 12px 18px;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            position: relative;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bubble.user {
+            background: var(--user-bubble);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-left: 2px solid var(--secondary);
+            color: white;
+            border-radius: 10px 10px 0 10px;
+        }
+
+        .bubble.bot {
+            background: var(--bot-bubble);
+            border: 1px solid var(--border-glass);
+            border-left: 2px solid var(--primary);
+            color: #d1d5db;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            border-radius: 10px 10px 10px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .bubble-header {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            opacity: 0.7;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+        .bubble.bot .bubble-header { color: var(--primary); }
+        .bubble.user .bubble-header { color: var(--secondary); text-align: right; }
+
+        /* Input Area */
+        .input-zone {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid var(--border-glass);
+            display: flex;
+            gap: 15px;
+        }
+
+        .input-glass {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-glass);
+            border-radius: 4px;
+            padding: 12px 16px;
+            color: var(--primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+        
+        .input-glass:focus {
+            outline: none;
+            background: rgba(0, 255, 242, 0.05);
+            box-shadow: 0 0 15px rgba(0, 255, 242, 0.1);
+        }
+
+        .btn-send {
+            background: var(--primary-dim);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 0 25px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .btn-send:hover {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 20px var(--primary);
+        }
+        
+        .btn-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Loading Animation */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 5px 0;
+        }
+        .dot {
+            width: 6px; height: 6px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes bounce { 
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="interface-container">
+    <header>
+        <div class="brand">
+            <div class="status-light"></div>
+            OORTIS <span style="font-weight:300; opacity:0.6">// ONLINE</span>
+        </div>
+        <div style="font-family: 'JetBrains Mono'; font-size: 0.75rem; color: var(--text-dim);">
+            Host: <span style="color:var(--primary)">Dataoorts AI</span>
+        </div>
+    </header>
+
+    <div class="chat-viewport" id="chatbox">
+        <!-- Intro Message -->
+        <div class="message-row bot">
+            <div class="bubble bot">
+                <div class="bubble-header">OORTIS</div>
+                <div>Hey! I’m Oortis — feel free to ask me anything about Dataoorts, AI, or GPU-powered HPC systems.</div>
+            </div>
+        </div>
+    </div>
+
+    <form class="input-zone" id="chatForm">
+        <input type="text" name="message" id="userInput" class="input-glass" placeholder="Enter command or query..." autocomplete="off" required>
+        <button type="submit" class="btn-send" id="sendBtn">ASK OORTIS</button>
+    </form>
+</div>
+
+<script>
+    const chatbox = document.getElementById('chatbox');
+    const form = document.getElementById('chatForm');
+    const input = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    function addMessage(text, sender) {
+        const row = document.createElement('div');
+        row.className = `message-row ${sender}`;
+        
+        const bubble = document.createElement('div');
+        bubble.className = `bubble ${sender}`;
+        
+        const header = document.createElement('div');
+        header.className = 'bubble-header';
+        header.innerText = sender === 'user' ? 'OPERATOR' : 'OORTIS CORE';
+        
+        const content = document.createElement('div');
+        // Simple regex to parse newlines for HTML
+        content.innerHTML = text.replace(/\n/g, '<br>');
+
+        bubble.appendChild(header);
+        bubble.appendChild(content);
+        row.appendChild(bubble);
+        
+        chatbox.appendChild(row);
+        chatbox.scrollTop = chatbox.scrollHeight;
+    }
+
+    function addLoading() {
+        const row = document.createElement('div');
+        row.className = 'message-row bot';
+        row.id = 'loading-row';
+        
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble bot';
+        
+        const indicator = document.createElement('div');
+        indicator.className = 'typing-indicator';
+        indicator.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+        
+        bubble.appendChild(indicator);
+        row.appendChild(bubble);
+        chatbox.appendChild(row);
+        chatbox.scrollTop = chatbox.scrollHeight;
+    }
+
+    function removeLoading() {
+        const el = document.getElementById('loading-row');
+        if (el) el.remove();
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text) return;
+
+        // UI Updates
+        addMessage(text, 'user');
+        input.value = '';
+        input.disabled = true;
+        sendBtn.disabled = true;
+        addLoading();
+
+        try {
+            const formData = new FormData();
+            formData.append('message', text);
+
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+            removeLoading();
+
+            if (data.status === 'success') {
+                addMessage(data.reply, 'bot');
+            } else {
+                addMessage(`ERROR: ${data.message}`, 'bot');
+            }
+
+        } catch (err) {
+            removeLoading();
+            addMessage(`CONNECTION FAILURE: ${err.message}`, 'bot');
+        } finally {
+            input.disabled = false;
+            sendBtn.disabled = false;
+            input.focus();
+        }
+    });
+</script>
+</body>
+</html>
